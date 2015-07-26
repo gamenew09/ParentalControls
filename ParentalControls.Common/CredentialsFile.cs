@@ -28,16 +28,28 @@ namespace ParentalControls.Common
         }
     }
 
+    [Serializable]
     public struct ParentalControlsCredential
     {
 
         public ParentalControlsCredential(string name, string password, bool hashedAlready)
         {
             Username = name;
-            if (hashedAlready)
+            if (!hashedAlready)
                 HashedPassword = SHA256Hash.Hash(password);
             else
                 HashedPassword = password;
+        }
+
+        // Declare an explicit conversion from a RomanNumeral to an int:
+        static public explicit operator NetworkCredential(ParentalControlsCredential cred)
+        {
+            return new NetworkCredential(cred.Username, cred.HashedPassword);
+        }
+
+        static public explicit operator ParentalControlsCredential(NetworkCredential cred)
+        {
+            return new ParentalControlsCredential(cred.UserName, cred.Password, true);
         }
 
         /// <summary>
@@ -48,6 +60,16 @@ namespace ParentalControls.Common
         /// Password hashed in SHA256, using UTF-8.
         /// </summary>
         public string HashedPassword;
+
+        /// <summary>
+        /// Validates a credential passed with this.
+        /// </summary>
+        /// <param name="cred">The credential to validate.</param>
+        /// <returns>Is the credential valid?</returns>
+        public bool ValidateCredentials(ParentalControlsCredential cred)
+        {
+            return (cred.Username == Username && cred.HashedPassword == HashedPassword);
+        }
 
     }
 
@@ -130,6 +152,20 @@ namespace ParentalControls.Common
             {
                 info.AddValue(i.ToString(), ParentalControlsCredentials[i]);
             }
+        }
+
+        public bool Validate(ParentalControlsCredential parentalControlsCredential)
+        {
+            Console.WriteLine("Username: {0} Password: {1}", parentalControlsCredential.Username, parentalControlsCredential.HashedPassword);
+            foreach (ParentalControlsCredential cred in _ParentalControlsCredentials)
+            {
+                Console.WriteLine("Username: {0} Password: {1}", cred.Username, cred.HashedPassword);
+                if (cred.ValidateCredentials(parentalControlsCredential))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
