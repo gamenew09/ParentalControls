@@ -68,7 +68,6 @@ namespace ParentalControls.Common
             set;
         }
 
-        [NonSerialized]
         public ICollection<ParentalControlsCredential> ParentalControlsCredentials
         {
             get
