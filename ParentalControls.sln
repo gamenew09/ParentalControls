@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParentalControls.GUI", "ParentalControls.GUI\ParentalControls.GUI.csproj", "{8BAE11D3-D0FC-4462-A80C-F22F03FCF455}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParentalControls.Service", "ParentalControls.Service\ParentalControls.Service.csproj", "{64FBFBB7-E197-4565-BEE8-2F8416AB1255}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParentalControls.Common", "ParentalControls.Common\ParentalControls.Common.csproj", "{24DE6848-8D5C-40B4-82DE-532276A5B0B5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8BAE11D3-D0FC-4462-A80C-F22F03FCF455}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BAE11D3-D0FC-4462-A80C-F22F03FCF455}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BAE11D3-D0FC-4462-A80C-F22F03FCF455}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BAE11D3-D0FC-4462-A80C-F22F03FCF455}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64FBFBB7-E197-4565-BEE8-2F8416AB1255}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64FBFBB7-E197-4565-BEE8-2F8416AB1255}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64FBFBB7-E197-4565-BEE8-2F8416AB1255}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64FBFBB7-E197-4565-BEE8-2F8416AB1255}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24DE6848-8D5C-40B4-82DE-532276A5B0B5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24DE6848-8D5C-40B4-82DE-532276A5B0B5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24DE6848-8D5C-40B4-82DE-532276A5B0B5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24DE6848-8D5C-40B4-82DE-532276A5B0B5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
