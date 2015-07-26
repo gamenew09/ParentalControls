@@ -70,6 +70,7 @@ namespace ParentalControls.GUI
                 {
                     WindowsSecurity.GetCredentialsVistaAndUp("Please enter new credentials for Parental Controls", "Set username and password for stopping an alarm. (Credentials must not be empty)", out cred);
                 }
+                file2.Add((ParentalControlsCredential)cred);
                 TaskDialog ndialog = new TaskDialog();
                 ndialog.Caption = Application.ProductName + " Setup";
                 ndialog.InstructionText = "Want to test your credentials?";

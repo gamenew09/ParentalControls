@@ -68,7 +68,13 @@ namespace ParentalControls.Common
         /// <returns>Is the credential valid?</returns>
         public bool ValidateCredentials(ParentalControlsCredential cred)
         {
+            Console.WriteLine("CredA: {0} CredB: {1}", this.ToString(), cred.ToString());
             return (cred.Username == Username && cred.HashedPassword == HashedPassword);
+        }
+
+        public override string ToString()
+        {
+            return string.Format("ParentalControlsCredential@Username={0}&HashedPassword={1}", Username, HashedPassword);
         }
 
     }
