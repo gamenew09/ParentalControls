@@ -9,13 +9,30 @@ using System.Windows.Forms;
 
 namespace ParentalControls.Common
 {
+
+    public class InvalidOperatingSystemException : Exception
+    {
+        public InvalidOperatingSystemException(OperatingSystem systemInvalid)
+            : base("System type of " + systemInvalid.VersionString + " is not usable.")
+        {
+
+        }
+
+        public InvalidOperatingSystemException(string aboveOS)
+            : base("The system is not above \""+aboveOS+"\".")
+        {
+
+        }
+    }
+
     public class WindowsSecurity
     {
+        #region Native CredUI
         [DllImport("ole32.dll")]
         public static extern void CoTaskMemFree(IntPtr ptr);
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        private struct CREDUI_INFO
+        public struct CredentialUI_Info
         {
             public int cbSize;
             public IntPtr hwndParent;
@@ -23,10 +40,9 @@ namespace ParentalControls.Common
             public string pszCaptionText;
             public IntPtr hbmBanner;
         }
-
-
+        
         [DllImport("credui.dll", CharSet = CharSet.Auto)]
-        private static extern bool CredUnPackAuthenticationBuffer(int dwFlags,
+        public static extern bool CredUnPackAuthenticationBuffer(int dwFlags,
                                                                    IntPtr pAuthBuffer,
                                                                    uint cbAuthBuffer,
                                                                    StringBuilder pszUserName,
@@ -36,8 +52,39 @@ namespace ParentalControls.Common
                                                                    StringBuilder pszPassword,
                                                                    ref int pcchMaxPassword);
 
+
+        public enum CredUIPromptFlags : int
+        {
+            ALWAYS_SHOW_UI = 0x00080,
+            COMPLETE_USERNAME = 0x00800,
+            NO_NOT_PERSIST = 0x00002,
+            EXCLUDE_CERTIFICATES = 0x00008,
+            EXPECT_CONFIRMATION = 0x20000,
+            GENERIC_CREDENTIALS = 0x40000,
+            FLAGS_INCORRECT_PASSWORD = 0x00001,
+            KEEP_USERNAME = 0x100000,
+            PASSWORD_ONLY_OK = 0x00200,
+            PERSIST = 0x01000,
+            REQUEST_ADMINISTRATOR = 0x00004,
+            REQUIRE_CERTIFICATE = 0x00010,
+            REQUIRE_SMARTCARD = 0x00100,
+            SERVER_CREDENTIAL = 0x04000,
+            SHOW_SAVE_CHECK_BOX = 0x00040,
+            USERNAME_TARGET_CREDENTIALS = 0x80000,
+            VALIDATE_USERNAME = 0x00400
+        }
+
+        public enum CredUIReturnValues
+        {
+            ERROR_CANCELLED,
+            ERROR_INVALID_FLAGS,
+            ERROR_INVALID_PARAMETER,
+            ERROR_NO_SUCH_LOGON_SESSION,
+            ERROR_NONE
+        }
+
         [DllImport("credui.dll", CharSet = CharSet.Auto)]
-        private static extern int CredUIPromptForWindowsCredentials(ref CREDUI_INFO notUsedHere,
+        public static extern int CredUIPromptForWindowsCredentials(ref CredentialUI_Info notUsedHere,
                                                                      int authError,
                                                                      ref uint authPackage,
                                                                      IntPtr InAuthBuffer,
@@ -47,10 +94,69 @@ namespace ParentalControls.Common
                                                                      ref bool fSave,
                                                                      int flags);
 
+        #endregion
+
+        public static CredUIReturnValues ShowPromptForWindowsCredentials(CredentialUI_Info credui, CredUIPromptFlags flags, out NetworkCredential cred)
+        {
+            if (IsWinVistaOrHigher())
+                throw new InvalidOperatingSystemException("Windows XP");
+
+            credui.cbSize = Marshal.SizeOf(credui);
+            uint authPackage = 0;
+            IntPtr outCredBuffer = new IntPtr();
+            uint outCredSize;
+            bool save = false;
+
+            int result = CredUIPromptForWindowsCredentials(ref credui,
+                                                           0,
+                                                           ref authPackage,
+                                                           IntPtr.Zero,
+                                                           0,
+                                                           out outCredBuffer,
+                                                           out outCredSize,
+                                                           ref save,
+                                                           (int)flags);
+
+            cred = null;
+
+            if (result == 0)
+            {
+                var usernameBuf = new StringBuilder(100);
+                var passwordBuf = new StringBuilder(100);
+                var domainBuf = new StringBuilder(100);
+
+                int maxUserName = 100;
+                int maxDomain = 100;
+                int maxPassword = 100;
+                if (CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,
+                                                   domainBuf, ref maxDomain, passwordBuf, ref maxPassword))
+                {
+                    //TODO: ms documentation says we should call this but i can't get it to work
+                    //SecureZeroMem(outCredBuffer, outCredSize);
+
+                    //clear the memory allocated by CredUIPromptForWindowsCredentials 
+                    CoTaskMemFree(outCredBuffer);
+                    cred = new NetworkCredential()
+                    {
+                        UserName = usernameBuf.ToString(),
+                        Password = passwordBuf.ToString(),
+                        Domain = domainBuf.ToString()
+                    };
+                }
+            }
+
+            return (CredUIReturnValues)result;
+        }
+
+        static bool IsWinVistaOrHigher()
+        {
+            OperatingSystem OS = Environment.OSVersion;
+            return (OS.Platform == PlatformID.Win32NT) && (OS.Version.Major >= 6);
+        }
 
         public static void GetCredentialsVistaAndUp(string captionText, string messageText, out NetworkCredential networkCredential, IntPtr pointer)
         {
-            CREDUI_INFO credui = new CREDUI_INFO();
+            CredentialUI_Info credui = new CredentialUI_Info();
             //credui.pszCaptionText = "Please enter the credentails for " + serverName;
             credui.pszCaptionText = captionText;
             credui.pszMessageText = messageText;
@@ -102,7 +208,7 @@ namespace ParentalControls.Common
 
         public static void GetCredentialsVistaAndUp(string captionText, string messageText, out NetworkCredential networkCredential, Form form = null)
         {
-            CREDUI_INFO credui = new CREDUI_INFO();
+            CredentialUI_Info credui = new CredentialUI_Info();
             //credui.pszCaptionText = "Please enter the credentails for " + serverName;
             credui.pszCaptionText = captionText;
             credui.pszMessageText = messageText;
