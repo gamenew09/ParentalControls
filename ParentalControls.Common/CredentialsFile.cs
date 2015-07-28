@@ -184,6 +184,7 @@ namespace ParentalControls.Common
             {
                 foreach (ParentalControlsCredential cred in _ParentalControlsCredentials)
                 {
+                    Console.WriteLine("Saving Credential: {0}", cred.ToString());
                     stream.Write(cred.Username);
                     stream.Write(cred.HashedPassword);
                 }

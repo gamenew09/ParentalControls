@@ -64,6 +64,18 @@ namespace ParentalControls.GUI.Forms
                 TaskDialogButton tdb = (TaskDialogButton)aa;
                 ((TaskDialog)tdb.HostingDialog).Close(TaskDialogResult.Ok);
 
+                if (file2.ParentalControlsCredentials.Count > 0)
+                {
+                    TaskDialog dadialog = new TaskDialog();
+                    dadialog.InstructionText = "Setup Complete!";
+                    dadialog.Text = "You are now done setting up Parental Controls!";
+
+                    dadialog.StandardButtons = TaskDialogStandardButtons.Ok;
+                    dadialog.Show();
+
+                    return;
+                }
+
                 NetworkCredential cred = null;
                 WindowsSecurity.GetCredentialsVistaAndUp("Please enter new credentials for Parental Controls", "Set username and password for stopping an alarm.", out cred);
                 while (cred == null || (string.IsNullOrWhiteSpace(cred.UserName) || string.IsNullOrWhiteSpace(cred.Password)))
@@ -160,7 +172,27 @@ namespace ParentalControls.GUI.Forms
             
             dialog.Show();
             Enable(true);
+            // Kind of an hacky way of making this window get focused after showing dialogs.
+            SwitchToSelf();
         }
+
+        /// <summary>
+        /// Forces Windows to focus on this window, used in first startup.
+        /// </summary>
+        private void SwitchToSelf()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => { SwitchToThisWindow(this.Handle); }));
+            }
+            else
+            {
+                SwitchToThisWindow(this.Handle);
+            }
+        }
+
+        [DllImport("user32.dll")]
+        private static extern void SwitchToThisWindow(IntPtr windowHandle, bool altTab = true);
 
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -247,6 +279,12 @@ namespace ParentalControls.GUI.Forms
         {
             CredentialEditor editor = new CredentialEditor();
             editor.ShowDialog(this);
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            WindowsBlocker blocker = new WindowsBlocker();
+            blocker.Show();
         }
 
     }

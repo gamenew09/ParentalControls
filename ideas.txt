@@ -1,0 +1,11 @@
+Ideas that I might get around to eventually.
+
+Plugins in C#/Lua.
+Monitoring Web Traffic.
+Blocking Websites.
+
+That's all I can think of right now.
+
+Needs work:
+Alarm system
+Parental Control Service, what causes the you need to do something to pop up.

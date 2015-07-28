@@ -153,6 +153,8 @@
             this.MinimizeBox = false;
             this.Name = "CredentialEditor";
             this.Text = "Credentials Editor";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.CredentialEditor_FormClosing);
+            this.Load += new System.EventHandler(this.CredentialEditor_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);

@@ -113,9 +113,23 @@ namespace ParentalControls.GUI.Forms
                         dialog.Icon = TaskDialogStandardIcon.Information;
                     };
 
+                    RefreshItems(false);
+                    comboBox1.SelectedItem = null;
+                    comboBox1_SelectedIndexChanged(comboBox1, new EventArgs());
+
                     dialog.Show();
                 }
             }
+        }
+
+        private void CredentialEditor_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void CredentialEditor_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            file.Save();
         }
     }
 }
