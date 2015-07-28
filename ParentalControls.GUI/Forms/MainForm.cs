@@ -208,6 +208,21 @@ namespace ParentalControls.GUI.Forms
             {
                 Console.WriteLine("FirstTimeSetup failed: {0}", ex);
             }
+
+            RefreshItems(true);
+        }
+
+        void RefreshItems(bool shouldDisable = false)
+        {
+            if(shouldDisable)
+                foreach (Control c in groupBox1.Controls)
+                    c.Enabled = false;
+
+            listBox1.Items.Clear();
+            foreach (Alarm alarm in file.Alarms)
+            {
+                listBox1.Items.Add(alarm);
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)

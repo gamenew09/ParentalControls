@@ -20,10 +20,32 @@ namespace ParentalControls.Service
             InitializeComponent();
         }
 
-        bool ShowForceOff()
+        bool ShowBlocker()
         {
-            Process p = Process.Start("");
+            Process p = Process.Start(ParentalControlsRegistry.GetRegistryKey(true).GetValue("Path") + @"\ParentalControls.GUI.exe");
             return p.Start();
+        }
+
+        DayOfWeek GetCurrentDay()
+        {
+            DateTime time = DateTime.Now;
+            return time.DayOfWeek;
+        }
+
+        Time GetCurrentTime()
+        {
+            DateTime dt = DateTime.Now;
+            Time t = new Time();
+            t.Hour = dt.Hour;
+            t.Minutes = dt.Minute;
+            t.Seconds = dt.Second;
+            return t;
+        }
+
+        bool IsTimeToAlarm(Alarm alarm)
+        {
+            Time t = GetCurrentTime();
+            return (alarm.AlarmTime.Hour == t.Hour && alarm.AlarmTime.Minutes == t.Minutes);
         }
 
         void WorkerThreadFunc()
@@ -34,7 +56,17 @@ namespace ParentalControls.Service
             {
                 if (file.IsValidForSaving())
                 {
-                    
+                    foreach (Alarm alarm in file.Alarms)
+                    {
+                        if (alarm.RepeatDays.HasFlag(GetCurrentDay()) && IsTimeToAlarm(alarm))
+                        {
+                            if (ShowBlocker())
+                            {
+                                Time a = GetCurrentTime();
+                                Console.WriteLine("The Alarm Blocker showed at {0}:{1} {2}.", a.Hour, a.Minutes, );
+                            }
+                        }
+                    }
                 }
                 Thread.Sleep(waitTime);
             }

@@ -157,6 +157,19 @@ namespace ParentalControls.Common
         public int Minutes;
         public int Seconds;
 
+        public int Get12HourTime(out bool pm)
+        {
+            pm = (Hour > 12);
+            if (pm)
+            {
+                return Math.Min(Hour - 12, 0);
+            }
+            else
+            {
+                return Hour;
+            }
+        }
+
     }
 
     [Serializable]
