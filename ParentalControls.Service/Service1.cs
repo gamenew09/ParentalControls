@@ -63,7 +63,7 @@ namespace ParentalControls.Service
                             if (ShowBlocker())
                             {
                                 Time a = GetCurrentTime();
-                                Console.WriteLine("The Alarm Blocker showed at {0}:{1} {2}.", a.Hour, a.Minutes, );
+                                Console.WriteLine("The Alarm Blocker showed at {0}:{1} {2}.", a.Hour, a.Minutes, (a.Hour > 12 ? "PM" : "AM"));
                             }
                         }
                     }

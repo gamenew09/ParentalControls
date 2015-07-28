@@ -59,6 +59,12 @@
     <Compile Include="Forms\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\NewAlarmForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\NewAlarmForm.Designer.cs">
+      <DependentUpon>NewAlarmForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\WindowsBlocker.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -72,6 +78,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\NewAlarmForm.resx">
+      <DependentUpon>NewAlarmForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\WindowsBlocker.resx">
       <DependentUpon>WindowsBlocker.cs</DependentUpon>

@@ -225,6 +225,10 @@ namespace ParentalControls.GUI.Forms
             }
         }
 
+        Alarm newAlarm = Alarm.Empty;
+
+        Alarm selectedAlarm = Alarm.Empty;
+
         private void button2_Click(object sender, EventArgs e)
         {
             
@@ -232,6 +236,11 @@ namespace ParentalControls.GUI.Forms
 
         private void Save()
         {
+            if (newAlarm != Alarm.Empty)
+            {
+                file.Add(newAlarm);
+                newAlarm = Alarm.Empty;
+            }
             if(file.IsValidForSaving())
                 file.Save();
         }

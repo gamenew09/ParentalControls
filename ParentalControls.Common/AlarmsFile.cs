@@ -150,12 +150,39 @@ namespace ParentalControls.Common
     /// Represents a time.
     /// </summary>
     [Serializable]
-    public struct Time
+    public class Time
     {
 
-        public int Hour;
-        public int Minutes;
-        public int Seconds;
+        public Time(int hour, int minutes, int seconds)
+        {
+            Hour = hour;
+            Minutes = minutes;
+            Seconds = seconds;
+        }
+
+        public Time()
+        {
+
+        }
+
+        public Time(int hour, int minutes)
+        {
+            Hour = hour;
+            Minutes = minutes;
+
+            Seconds = 0;
+        }
+
+        public static Alarm Empty = new Alarm();
+
+        public int Hour = -1;
+        public int Minutes = -1;
+        public int Seconds = -1;
+
+        public bool Valid()
+        {
+            return !(Hour < 1 || Minutes < 0 || Seconds < 0) || !(Hour > 24 || Minutes > 59 || Seconds > 59);
+        }
 
         public int Get12HourTime(out bool pm)
         {
@@ -173,13 +200,35 @@ namespace ParentalControls.Common
     }
 
     [Serializable]
-    public struct Alarm
+    public class Alarm
     {
+
+        public static Alarm Empty = new Alarm();
 
         public string Name;
         public Time AlarmTime;
         public DayOfWeek RepeatDays;
         public bool Enabled;
+
+        public static bool operator == (Alarm a1, Alarm a2)
+        {
+            return Equals(a1, a2);
+        }
+
+        public static bool operator !=(Alarm a1, Alarm a2)
+        {
+            return !Equals(a1, a2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+
+        public Alarm()
+        {
+
+        }
 
         public Alarm(string name, Time alarmTime, DayOfWeek days, bool enabled)
         {
