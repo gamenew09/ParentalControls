@@ -25,24 +25,37 @@ namespace ParentalControls.Common
         }
     }
 
-    public class WindowsSecurity
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    public struct CredentialUI_Info
     {
-        #region Native CredUI
-        [DllImport("ole32.dll")]
-        public static extern void CoTaskMemFree(IntPtr ptr);
+        public int cbSize;
+        public IntPtr hwndParent;
+        public string pszMessageText;
+        public string pszCaptionText;
+        public IntPtr hbmBanner;
+    }
 
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct CredentialUI_Info
-        {
-            public int cbSize;
-            public IntPtr hwndParent;
-            public string pszMessageText;
-            public string pszCaptionText;
-            public IntPtr hbmBanner;
-        }
-        
+    internal static class WindowsSecurityNative
+    {
+        [DllImport("ole32.dll")]
+        internal static extern void CoTaskMemFree(IntPtr ptr);
+
         [DllImport("credui.dll", CharSet = CharSet.Auto)]
-        public static extern bool CredUnPackAuthenticationBuffer(int dwFlags,
+        internal static extern int CredUIPromptForWindowsCredentials(ref CredentialUI_Info notUsedHere,
+                                                                     int authError,
+                                                                     ref uint authPackage,
+                                                                     IntPtr InAuthBuffer,
+                                                                     uint InAuthBufferSize,
+                                                                     out IntPtr refOutAuthBuffer,
+                                                                     out uint refOutAuthBufferSize,
+                                                                     ref bool fSave,
+                                                                     int flags);
+
+
+        
+
+        [DllImport("credui.dll", CharSet = CharSet.Auto)]
+        internal static extern bool CredUnPackAuthenticationBuffer(int dwFlags,
                                                                    IntPtr pAuthBuffer,
                                                                    uint cbAuthBuffer,
                                                                    StringBuilder pszUserName,
@@ -52,6 +65,12 @@ namespace ParentalControls.Common
                                                                    StringBuilder pszPassword,
                                                                    ref int pcchMaxPassword);
 
+
+    }
+
+    public class WindowsSecurity
+    {
+        #region Native CredUI
 
         public enum CredUIPromptFlags : int
         {
@@ -82,18 +101,6 @@ namespace ParentalControls.Common
             ERROR_NO_SUCH_LOGON_SESSION,
             ERROR_NONE
         }
-
-        [DllImport("credui.dll", CharSet = CharSet.Auto)]
-        public static extern int CredUIPromptForWindowsCredentials(ref CredentialUI_Info notUsedHere,
-                                                                     int authError,
-                                                                     ref uint authPackage,
-                                                                     IntPtr InAuthBuffer,
-                                                                     uint InAuthBufferSize,
-                                                                     out IntPtr refOutAuthBuffer,
-                                                                     out uint refOutAuthBufferSize,
-                                                                     ref bool fSave,
-                                                                     int flags);
-
         #endregion
 
         public static CredUIReturnValues ShowPromptForWindowsCredentials(CredentialUI_Info credui, CredUIPromptFlags flags, out NetworkCredential cred)
@@ -107,7 +114,7 @@ namespace ParentalControls.Common
             uint outCredSize;
             bool save = false;
 
-            int result = CredUIPromptForWindowsCredentials(ref credui,
+            int result = WindowsSecurityNative.CredUIPromptForWindowsCredentials(ref credui,
                                                            0,
                                                            ref authPackage,
                                                            IntPtr.Zero,
@@ -128,14 +135,14 @@ namespace ParentalControls.Common
                 int maxUserName = 100;
                 int maxDomain = 100;
                 int maxPassword = 100;
-                if (CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,
+                if (WindowsSecurityNative.CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,
                                                    domainBuf, ref maxDomain, passwordBuf, ref maxPassword))
                 {
                     //TODO: ms documentation says we should call this but i can't get it to work
                     //SecureZeroMem(outCredBuffer, outCredSize);
 
                     //clear the memory allocated by CredUIPromptForWindowsCredentials 
-                    CoTaskMemFree(outCredBuffer);
+                    WindowsSecurityNative.CoTaskMemFree(outCredBuffer);
                     cred = new NetworkCredential()
                     {
                         UserName = usernameBuf.ToString(),
@@ -166,7 +173,7 @@ namespace ParentalControls.Common
             IntPtr outCredBuffer = new IntPtr();
             uint outCredSize;
             bool save = false;
-            int result = CredUIPromptForWindowsCredentials(ref credui,
+            int result = WindowsSecurityNative.CredUIPromptForWindowsCredentials(ref credui,
                                                            0,
                                                            ref authPackage,
                                                            IntPtr.Zero,
@@ -185,14 +192,14 @@ namespace ParentalControls.Common
             int maxPassword = 100;
             if (result == 0)
             {
-                if (CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,
+                if (WindowsSecurityNative.CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,
                                                    domainBuf, ref maxDomain, passwordBuf, ref maxPassword))
                 {
                     //TODO: ms documentation says we should call this but i can't get it to work
                     //SecureZeroMem(outCredBuffer, outCredSize);
 
                     //clear the memory allocated by CredUIPromptForWindowsCredentials 
-                    CoTaskMemFree(outCredBuffer);
+                    WindowsSecurityNative.CoTaskMemFree(outCredBuffer);
                     networkCredential = new NetworkCredential()
                     {
                         UserName = usernameBuf.ToString(),
@@ -219,7 +226,7 @@ namespace ParentalControls.Common
             IntPtr outCredBuffer = new IntPtr();
             uint outCredSize;
             bool save = false;
-            int result = CredUIPromptForWindowsCredentials(ref credui,
+            int result = WindowsSecurityNative.CredUIPromptForWindowsCredentials(ref credui,
                                                            0,
                                                            ref authPackage,
                                                            IntPtr.Zero,
@@ -238,14 +245,14 @@ namespace ParentalControls.Common
             int maxPassword = 100;
             if (result == 0)
             {
-                if (CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,
+                if (WindowsSecurityNative.CredUnPackAuthenticationBuffer(0, outCredBuffer, outCredSize, usernameBuf, ref maxUserName,
                                                    domainBuf, ref maxDomain, passwordBuf, ref maxPassword))
                 {
                     //TODO: ms documentation says we should call this but i can't get it to work
                     //SecureZeroMem(outCredBuffer, outCredSize);
 
                     //clear the memory allocated by CredUIPromptForWindowsCredentials 
-                    CoTaskMemFree(outCredBuffer);
+                    WindowsSecurityNative.CoTaskMemFree(outCredBuffer);
                     networkCredential = new NetworkCredential()
                     {
                         UserName = usernameBuf.ToString(),

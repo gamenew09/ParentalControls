@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace ParentalControls.Common
 {
     [Serializable]
-    public class AlarmsFile : ISerializable
+    public class AlarmsFile
     {
 
         HashSet<Alarm> _Alarms = new HashSet<Alarm>();
@@ -72,10 +72,19 @@ namespace ParentalControls.Common
         /// </summary>
         public void Save()
         {
-            using(FileStream stream = new FileStream(FileName, FileMode.OpenOrCreate))
+            using (BinaryWriter stream = new BinaryWriter(new FileStream(FileName, FileMode.OpenOrCreate)))
             {
-                BinaryFormatter binary = new BinaryFormatter();
-                binary.Serialize(stream, this);
+                foreach (Alarm alarm in _Alarms)
+                {
+                    stream.Write(alarm.Name);
+                    stream.Write(alarm.Enabled);
+
+                    stream.Write(alarm.AlarmTime.Hour);
+                    stream.Write(alarm.AlarmTime.Minutes);
+                    stream.Write(alarm.AlarmTime.Seconds);
+
+                    stream.Write((int)alarm.RepeatDays);
+                }
             }
         }
 
@@ -86,30 +95,55 @@ namespace ParentalControls.Common
         /// <returns>AlarmsFile with FileName.</returns>
         public static AlarmsFile Load(string filename)
         {
-            using (FileStream stream = new FileStream(filename, FileMode.OpenOrCreate))
+            AlarmsFile file = new AlarmsFile();
+            try
             {
-                try
+                using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.OpenOrCreate)))
                 {
-                    BinaryFormatter binary = new BinaryFormatter();
-                    return (AlarmsFile)binary.Deserialize(stream);
-                }
-                catch 
-                { 
-                    AlarmsFile file = new AlarmsFile();
-                    file.FileName = filename;
-                    return file;
+                    Alarm alarm = new Alarm();
+                    alarm.AlarmTime = new Time();
+                    int readat = 0;
+                    while (reader.BaseStream.Position < reader.BaseStream.Length)
+                    {
+                        switch (readat)
+                        {
+                            case 0:
+                                alarm.Name = reader.ReadString();
+                                readat++;
+                                break;
+                            case 1:
+                                alarm.Enabled = reader.ReadBoolean();
+                                readat++;
+                                break;
+                            case 2:
+                                alarm.AlarmTime.Hour = reader.ReadInt32();
+                                readat++;
+                                break;
+                            case 3:
+                                alarm.AlarmTime.Minutes = reader.ReadInt32();
+                                readat++;
+                                break;
+                            case 4:
+                                alarm.AlarmTime.Seconds = reader.ReadInt32();
+                                readat++;
+                                break;
+                            case 5:
+                                alarm.RepeatDays = (DayOfWeek)reader.ReadInt32();
+
+                                file.Add(alarm);
+                                readat = 0;
+                                alarm = new Alarm();
+                                alarm.AlarmTime = new Time();
+                                break;
+                            
+                        }
+                    }
                 }
             }
+            catch { }
+            return file;
         }
 
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            Alarm[] alarms = _Alarms.ToArray();
-            for (int i = 0; i < _Alarms.Count;i++)
-            {
-                info.AddValue(i.ToString(), alarms[i]);
-            }
-        }
     }
 
     /// <summary>

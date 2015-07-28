@@ -16,9 +16,9 @@ using ParentalControls.Common;
 using System.Runtime.InteropServices;
 using System.Net;
 
-namespace ParentalControls.GUI
+namespace ParentalControls.GUI.Forms
 {
-    public partial class Form1 : Form
+    public partial class MainForm : Form
     {
 
         public const string ALARMS_FILE = "alarms.bas";
@@ -27,7 +27,7 @@ namespace ParentalControls.GUI
         AlarmsFile file;
         ParentalControlsCredentialsFile file2;
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
 
@@ -70,7 +70,15 @@ namespace ParentalControls.GUI
                 {
                     WindowsSecurity.GetCredentialsVistaAndUp("Please enter new credentials for Parental Controls", "Set username and password for stopping an alarm. (Credentials must not be empty)", out cred);
                 }
-                file2.Add((ParentalControlsCredential)cred);
+                ParentalControlsCredential c;
+                try
+                {
+                    c = (ParentalControlsCredential)cred;
+                    c.HashedPassword = SHA256Hash.Hash(c.HashedPassword);
+                    file2.Add(c);
+                    file2.Save();
+                }
+                catch {  }
                 TaskDialog ndialog = new TaskDialog();
                 ndialog.Caption = Application.ProductName + " Setup";
                 ndialog.InstructionText = "Want to test your credentials?";
@@ -85,12 +93,17 @@ namespace ParentalControls.GUI
                     ((TaskDialog)tb.HostingDialog).Close(TaskDialogResult.Yes);
 
                     WindowsSecurity.GetCredentialsVistaAndUp("Please enter credentials for \"Parental Controls\"", "Force disabling \"TestAlarm\"", out cred);
+                    c = new ParentalControlsCredential();
+                    try
+                    {
+                        c = (ParentalControlsCredential)cred;
+                        c.HashedPassword = SHA256Hash.Hash(c.HashedPassword);
+                    }
+                    catch { }
 
-                    bool reallyvalid = true;
+                    bool wevalidated = true;
 
-                    Console.WriteLine(file2.Validate((ParentalControlsCredential)cred));
-
-                    while (cred == null || !file2.Validate((ParentalControlsCredential)cred) || (string.IsNullOrWhiteSpace(cred.UserName) || string.IsNullOrWhiteSpace(cred.Password)))
+                    while (cred == null || !file2.Validate(c) || (string.IsNullOrWhiteSpace(cred.UserName) || string.IsNullOrWhiteSpace(cred.Password)))
                     {
                         TaskDialog ddialog = new TaskDialog();
 
@@ -99,22 +112,23 @@ namespace ParentalControls.GUI
 
                         ddialog.StandardButtons = TaskDialogStandardButtons.Yes | TaskDialogStandardButtons.No;
 
-                        Console.WriteLine("test123");
-
                         if (ddialog.Show() == TaskDialogResult.Yes)
                         {
-                            reallyvalid = false;
+                            wevalidated = false;
                             break;
                         }
                         else
-                        {
                             WindowsSecurity.GetCredentialsVistaAndUp("Please enter credentials for \"Parental Controls\"", "Force disabling \"TestAlarm\"", out cred);
-                        }
                     }
-
                     TaskDialog dadialog = new TaskDialog();
-
-                    dadialog.InstructionText = "Credentials Valid!";
+                    if (wevalidated)
+                    {
+                        dadialog.InstructionText = "Credentials Valid!";
+                    }
+                    else
+                    {
+                        dadialog.InstructionText = "Setup Complete!";
+                    }
                     dadialog.Text = "You are now done setting up Parental Controls!";
 
                     dadialog.StandardButtons = TaskDialogStandardButtons.Ok;
@@ -127,13 +141,19 @@ namespace ParentalControls.GUI
                 {
                     TaskDialogButton tb = (TaskDialogButton)ba;
                     ((TaskDialog)tb.HostingDialog).Close(TaskDialogResult.No);
+
+                    TaskDialog dadialog = new TaskDialog();
+                    dadialog.InstructionText = "Setup Complete!";
+                    dadialog.Text = "You are now done setting up Parental Controls!";
+
+                    dadialog.StandardButtons = TaskDialogStandardButtons.Ok;
+                    dadialog.Show();
                 };
 
                 ndialog.Controls.Add(linka);
                 ndialog.Controls.Add(linkb);
 
                 ndialog.Show();
-                file2.Add(cred.UserName, cred.Password);
                 file2.Save();
             };
             dialog.Controls.Add(button);
@@ -154,7 +174,7 @@ namespace ParentalControls.GUI
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                Console.WriteLine("FirstTimeSetup failed: {0}", ex);
             }
         }
 
@@ -216,6 +236,17 @@ namespace ParentalControls.GUI
             {
                 checkedListBox1.Enabled = textBox1.Enabled = domainUpDown1.Enabled = numericUpDown1.Enabled = numericUpDown2.Enabled = checkBox1.Enabled = button1.Enabled = button3.Enabled = false;
             }
+        }
+
+        private void viewToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void credentialsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CredentialEditor editor = new CredentialEditor();
+            editor.ShowDialog(this);
         }
 
     }

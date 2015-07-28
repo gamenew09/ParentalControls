@@ -52,6 +52,14 @@ namespace ParentalControls.Common
             return new ParentalControlsCredential(cred.UserName, cred.Password, true);
         }
 
+        public override bool Equals(object obj)
+        {
+            if (obj.GetType() != typeof(ParentalControlsCredential))
+                return false;
+
+            return ((ParentalControlsCredential)obj).Username == this.Username;
+        }
+
         /// <summary>
         /// Username of a credential.
         /// </summary>
@@ -68,22 +76,73 @@ namespace ParentalControls.Common
         /// <returns>Is the credential valid?</returns>
         public bool ValidateCredentials(ParentalControlsCredential cred)
         {
-            Console.WriteLine("CredA: {0} CredB: {1}", this.ToString(), cred.ToString());
+            //Console.WriteLine("CredA: {0} CredB: {1}", this.ToString(), cred.ToString());
             return (cred.Username == Username && cred.HashedPassword == HashedPassword);
         }
 
+        /*
         public override string ToString()
         {
             return string.Format("ParentalControlsCredential@Username={0}&HashedPassword={1}", Username, HashedPassword);
+        }
+        */
+
+        public override string ToString()
+        {
+            return Username;
         }
 
     }
 
     [Serializable]
-    public class ParentalControlsCredentialsFile : ISerializable
+    public class ParentalControlsCredentialsFile
     {
 
+        public ParentalControlsCredentialsFile()
+        {
+
+        }
+
         HashSet<ParentalControlsCredential> _ParentalControlsCredentials = new HashSet<ParentalControlsCredential>();
+
+        public bool Remove(ParentalControlsCredential cred)
+        {
+            return Remove(cred.Username);
+        }
+
+        public bool Remove(string username)
+        {
+            bool remove = false;
+            int i = 0;
+            foreach (ParentalControlsCredential cred in _ParentalControlsCredentials)
+            {
+                Console.WriteLine("Thing: {0} == {1} is {2}", cred.Username, username, (cred.Username == username));
+                if (cred.Username == username)
+                {
+                    remove = true;
+                    break;
+                }
+                i++;
+            }
+
+            if (remove)
+                return _ParentalControlsCredentials.Remove(_ParentalControlsCredentials.ToList()[i]);
+
+            return false;
+        }
+
+        public bool Exists(ParentalControlsCredential cred)
+        {
+            foreach (ParentalControlsCredential c in _ParentalControlsCredentials)
+            {
+                //Console.WriteLine("Username: {0} Password: {1}", cred.Username, cred.HashedPassword);
+                if (cred.Username == c.Username)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
 
         public bool IsValidForSaving()
         {
@@ -121,10 +180,29 @@ namespace ParentalControls.Common
         /// </summary>
         public void Save()
         {
-            using (FileStream stream = new FileStream(FileName, FileMode.OpenOrCreate))
+            using (BinaryWriter stream = new BinaryWriter(new FileStream(FileName, FileMode.OpenOrCreate)))
             {
-                BinaryFormatter binary = new BinaryFormatter();
-                binary.Serialize(stream, this);
+                foreach (ParentalControlsCredential cred in _ParentalControlsCredentials)
+                {
+                    stream.Write(cred.Username);
+                    stream.Write(cred.HashedPassword);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Saves to file specified by FileName.
+        /// <param name="filename">The file to write to.</param>
+        /// </summary>
+        public void Save(string filename)
+        {
+            using (BinaryWriter stream = new BinaryWriter(new FileStream(filename, FileMode.OpenOrCreate)))
+            {
+                foreach (ParentalControlsCredential cred in _ParentalControlsCredentials)
+                {
+                    stream.Write(cred.Username);
+                    stream.Write(cred.HashedPassword);
+                }
             }
         }
 
@@ -135,37 +213,42 @@ namespace ParentalControls.Common
         /// <returns>ParentalControlsCredentialsFile with FileName.</returns>
         public static ParentalControlsCredentialsFile Load(string filename)
         {
-            using (FileStream stream = new FileStream(filename, FileMode.OpenOrCreate))
+            ParentalControlsCredentialsFile file = new ParentalControlsCredentialsFile();
+            file.FileName = filename;
+            try
             {
-                try
+                using (BinaryReader reader = new BinaryReader(new FileStream(filename, FileMode.OpenOrCreate)))
                 {
-                    BinaryFormatter binary = new BinaryFormatter();
-                    return (ParentalControlsCredentialsFile)binary.Deserialize(stream);
-                }
-                catch
-                {
-                    ParentalControlsCredentialsFile file = new ParentalControlsCredentialsFile();
-                    file.FileName = filename;
-                    return file;
+                    ParentalControlsCredential cred = new ParentalControlsCredential();
+                    int readat = 0;
+                    while (reader.BaseStream.Position < reader.BaseStream.Length)
+                    {
+                        switch (readat)
+                        {
+                            case 0:
+                                cred.Username = reader.ReadString();
+                                readat = 1;
+                                break;
+                            case 1:
+                                cred.HashedPassword = reader.ReadString();
+                                readat = 0;
+                                file.Add(cred);
+                                cred = new ParentalControlsCredential();
+                                break;
+                        }
+                    }
                 }
             }
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            ParentalControlsCredential[] ParentalControlsCredentials = _ParentalControlsCredentials.ToArray();
-            for (int i = 0; i < _ParentalControlsCredentials.Count; i++)
-            {
-                info.AddValue(i.ToString(), ParentalControlsCredentials[i]);
-            }
+            catch { }
+            return file;
         }
 
         public bool Validate(ParentalControlsCredential parentalControlsCredential)
         {
-            Console.WriteLine("Username: {0} Password: {1}", parentalControlsCredential.Username, parentalControlsCredential.HashedPassword);
+            //Console.WriteLine("Username: {0} Password: {1}", parentalControlsCredential.Username, parentalControlsCredential.HashedPassword);
             foreach (ParentalControlsCredential cred in _ParentalControlsCredentials)
             {
-                Console.WriteLine("Username: {0} Password: {1}", cred.Username, cred.HashedPassword);
+                //Console.WriteLine("Username: {0} Password: {1}", cred.Username, cred.HashedPassword);
                 if (cred.ValidateCredentials(parentalControlsCredential))
                 {
                     return true;
